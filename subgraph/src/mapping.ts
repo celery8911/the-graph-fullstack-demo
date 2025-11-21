@@ -91,6 +91,30 @@ function getOrCreateDailyStats(timestamp: BigInt): DailyStats {
  * 处理 Transfer 事件
  */
 export function handleTransfer(event: TransferEvent): void {
+  // 更新发送方用户信息（排除铸造）
+  let fromUser: User;
+  if (event.params.from.toHexString() != ZERO_ADDRESS) {
+    fromUser = getOrCreateUser(event.params.from, event.block.timestamp);
+    fromUser.balance = fromUser.balance.minus(event.params.value);
+    fromUser.totalSent = fromUser.totalSent.plus(event.params.value);
+    fromUser.transferCount = fromUser.transferCount.plus(BigInt.fromI32(1));
+    fromUser.save();
+  } else {
+    fromUser = getOrCreateUser(event.params.from, event.block.timestamp);
+  }
+
+  // 更新接收方用户信息（排除销毁）
+  let toUser: User;
+  if (event.params.to.toHexString() != ZERO_ADDRESS) {
+    toUser = getOrCreateUser(event.params.to, event.block.timestamp);
+    toUser.balance = toUser.balance.plus(event.params.value);
+    toUser.totalReceived = toUser.totalReceived.plus(event.params.value);
+    toUser.transferCount = toUser.transferCount.plus(BigInt.fromI32(1));
+    toUser.save();
+  } else {
+    toUser = getOrCreateUser(event.params.to, event.block.timestamp);
+  }
+
   // 创建 Transfer 实体
   let id =
     event.transaction.hash.toHexString() +
@@ -98,31 +122,15 @@ export function handleTransfer(event: TransferEvent): void {
     event.logIndex.toString();
   let transfer = new Transfer(id);
 
-  transfer.from = event.params.from;
-  transfer.to = event.params.to;
+  transfer.from = fromUser.id;
+  transfer.fromAddress = event.params.from;
+  transfer.to = toUser.id;
+  transfer.toAddress = event.params.to;
   transfer.value = event.params.value;
   transfer.timestamp = event.block.timestamp;
   transfer.blockNumber = event.block.number;
   transfer.transactionHash = event.transaction.hash;
   transfer.save();
-
-  // 更新发送方用户信息（排除铸造）
-  if (event.params.from.toHexString() != ZERO_ADDRESS) {
-    let fromUser = getOrCreateUser(event.params.from, event.block.timestamp);
-    fromUser.balance = fromUser.balance.minus(event.params.value);
-    fromUser.totalSent = fromUser.totalSent.plus(event.params.value);
-    fromUser.transferCount = fromUser.transferCount.plus(BigInt.fromI32(1));
-    fromUser.save();
-  }
-
-  // 更新接收方用户信息（排除销毁）
-  if (event.params.to.toHexString() != ZERO_ADDRESS) {
-    let toUser = getOrCreateUser(event.params.to, event.block.timestamp);
-    toUser.balance = toUser.balance.plus(event.params.value);
-    toUser.totalReceived = toUser.totalReceived.plus(event.params.value);
-    toUser.transferCount = toUser.transferCount.plus(BigInt.fromI32(1));
-    toUser.save();
-  }
 
   // 更新全局统计
   let stats = getOrCreateTokenStats();
@@ -152,6 +160,11 @@ export function handleTransfer(event: TransferEvent): void {
  * 处理 DataUpdated 事件
  */
 export function handleDataUpdated(event: DataUpdatedEvent): void {
+  // 更新用户信息
+  let user = getOrCreateUser(event.params.user, event.block.timestamp);
+  user.dataUpdateCount = user.dataUpdateCount.plus(BigInt.fromI32(1));
+  user.save();
+
   // 创建 DataUpdated 实体
   let id =
     event.transaction.hash.toHexString() +
@@ -159,18 +172,14 @@ export function handleDataUpdated(event: DataUpdatedEvent): void {
     event.logIndex.toString();
   let dataUpdated = new DataUpdated(id);
 
-  dataUpdated.user = event.params.user;
+  dataUpdated.user = user.id;
+  dataUpdated.userAddress = event.params.user;
   dataUpdated.tokenId = event.params.tokenId;
   dataUpdated.data = event.params.data;
   dataUpdated.timestamp = event.params.timestamp;
   dataUpdated.blockNumber = event.block.number;
   dataUpdated.transactionHash = event.transaction.hash;
   dataUpdated.save();
-
-  // 更新用户信息
-  let user = getOrCreateUser(event.params.user, event.block.timestamp);
-  user.dataUpdateCount = user.dataUpdateCount.plus(BigInt.fromI32(1));
-  user.save();
 
   // 更新全局统计
   let stats = getOrCreateTokenStats();

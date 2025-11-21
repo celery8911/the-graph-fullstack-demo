@@ -7,10 +7,10 @@ dataSources:
     network: sepolia
     source:
       # 🔴 重要：将下面的地址替换为你部署的合约地址
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x0379201C1014ece6FEc1bFE4E6371C484748406a"
       abi: SimpleToken
       # 🔴 重要：将下面的区块号替换为你的合约部署区块号
-      startBlock: 0
+      startBlock: 9673750
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

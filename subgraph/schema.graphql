@@ -5,8 +5,10 @@
 """
 type Transfer @entity {
   id: ID! # 交易哈希 + 日志索引
-  from: Bytes! # 发送地址
-  to: Bytes! # 接收地址
+  from: User! # 发送用户
+  fromAddress: Bytes! # 发送地址
+  to: User! # 接收用户
+  toAddress: Bytes! # 接收地址
   value: BigInt! # 转账金额
   timestamp: BigInt! # 时间戳
   blockNumber: BigInt! # 区块号
@@ -18,7 +20,8 @@ type Transfer @entity {
 """
 type DataUpdated @entity {
   id: ID! # 交易哈希 + 日志索引
-  user: Bytes! # 用户地址
+  user: User! # 用户实体
+  userAddress: Bytes! # 用户地址
   tokenId: BigInt! # Token ID
   data: String! # 存储的数据
   timestamp: BigInt! # 时间戳
@@ -37,7 +40,8 @@ type User @entity {
   totalReceived: BigInt! # 总接收金额
   transferCount: BigInt! # 转账次数
   dataUpdateCount: BigInt! # 数据更新次数
-  transfers: [Transfer!]! @derivedFrom(field: "from") # 发送的转账
+  transfersFrom: [Transfer!]! @derivedFrom(field: "from") # 发送的转账
+  transfersTo: [Transfer!]! @derivedFrom(field: "to") # 接收的转账
   dataUpdates: [DataUpdated!]! @derivedFrom(field: "user") # 数据更新记录
   firstSeenTimestamp: BigInt! # 首次出现时间
   lastSeenTimestamp: BigInt! # 最后活跃时间
