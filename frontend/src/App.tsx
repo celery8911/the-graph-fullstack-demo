@@ -9,19 +9,24 @@ function App() {
   const [tokenStats, setTokenStats] = useState<any>(null);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [dataUpdates, setDataUpdates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  // 分离不同的 loading 状态
+  const [loadingData, setLoadingData] = useState(false);
+  const [loadingTransfer, setLoadingTransfer] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // 表单状态
   const [transferTo, setTransferTo] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
-  const [dataTokenId, setDataTokenId] = useState('1');
+  const [dataTokenId, setDataTokenId] = useState('');
   const [dataContent, setDataContent] = useState('');
 
   // 加载子图数据
   const loadSubgraphData = async () => {
-    setLoading(true);
+    setLoadingData(true);
     setError('');
     try {
       const [statsData, transfersData, dataUpdatesData] = await Promise.all([
@@ -36,7 +41,7 @@ function App() {
     } catch (err: any) {
       setError('加载数据失败: ' + err.message);
     } finally {
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -53,7 +58,7 @@ function App() {
       return;
     }
 
-    setLoading(true);
+    setLoadingTransfer(true);
     setError('');
     setSuccess('');
     try {
@@ -70,7 +75,7 @@ function App() {
     } catch (err: any) {
       setError('转账失败: ' + (err.reason || err.message));
     } finally {
-      setLoading(false);
+      setLoadingTransfer(false);
     }
   };
 
@@ -82,12 +87,15 @@ function App() {
       return;
     }
 
-    setLoading(true);
+    setLoadingUpdate(true);
     setError('');
     setSuccess('');
     try {
       const txHash = await web3.updateData(parseInt(dataTokenId), dataContent);
       setSuccess(`数据更新成功! 交易哈希: ${txHash}`);
+
+      // 清空表单
+      setDataTokenId('');
       setDataContent('');
 
       // 等待几秒让子图索引
@@ -97,7 +105,7 @@ function App() {
     } catch (err: any) {
       setError('数据更新失败: ' + (err.reason || err.message));
     } finally {
-      setLoading(false);
+      setLoadingUpdate(false);
     }
   };
 
@@ -151,7 +159,7 @@ function App() {
         {/* 代币统计 */}
         <div className="card">
           <h2>📊 代币统计</h2>
-          {loading && !tokenStats ? (
+          {loadingData && !tokenStats ? (
             <div className="loading">加载中...</div>
           ) : tokenStats ? (
             <div className="stats-grid">
@@ -189,7 +197,7 @@ function App() {
                 onChange={(e) => setTransferTo(e.target.value)}
                 placeholder="0x..."
                 required
-                disabled={!web3.account || loading}
+                disabled={!web3.account || loadingTransfer}
               />
             </div>
             <div className="form-group">
@@ -201,11 +209,11 @@ function App() {
                 onChange={(e) => setTransferAmount(e.target.value)}
                 placeholder="100"
                 required
-                disabled={!web3.account || loading}
+                disabled={!web3.account || loadingTransfer}
               />
             </div>
-            <button type="submit" disabled={!web3.account || loading}>
-              {loading ? '处理中...' : '发送'}
+            <button type="submit" disabled={!web3.account || loadingTransfer}>
+              {loadingTransfer ? '处理中...' : '发送'}
             </button>
           </form>
         </div>
@@ -222,7 +230,7 @@ function App() {
                 onChange={(e) => setDataTokenId(e.target.value)}
                 placeholder="1"
                 required
-                disabled={!web3.account || loading}
+                disabled={!web3.account || loadingUpdate}
               />
             </div>
             <div className="form-group">
@@ -232,11 +240,11 @@ function App() {
                 onChange={(e) => setDataContent(e.target.value)}
                 placeholder="输入要存储的数据..."
                 required
-                disabled={!web3.account || loading}
+                disabled={!web3.account || loadingUpdate}
               />
             </div>
-            <button type="submit" disabled={!web3.account || loading}>
-              {loading ? '处理中...' : '更新'}
+            <button type="submit" disabled={!web3.account || loadingUpdate}>
+              {loadingUpdate ? '处理中...' : '更新'}
             </button>
           </form>
         </div>
