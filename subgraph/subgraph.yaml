@@ -1,0 +1,32 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SimpleToken
+    network: sepolia
+    source:
+      # 🔴 重要：将下面的地址替换为你部署的合约地址
+      address: "0x0000000000000000000000000000000000000000"
+      abi: SimpleToken
+      # 🔴 重要：将下面的区块号替换为你的合约部署区块号
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+        - DataUpdated
+        - User
+        - TokenStats
+        - DailyStats
+      abis:
+        - name: SimpleToken
+          file: ./abis/SimpleToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: DataUpdated(indexed address,indexed uint256,string,uint256)
+          handler: handleDataUpdated
+      file: ./src/mapping.ts

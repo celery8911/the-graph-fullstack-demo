@@ -1,0 +1,68 @@
+# GraphQL Schema for SimpleToken Subgraph
+
+"""
+代币转账事件实体
+"""
+type Transfer @entity {
+  id: ID! # 交易哈希 + 日志索引
+  from: Bytes! # 发送地址
+  to: Bytes! # 接收地址
+  value: BigInt! # 转账金额
+  timestamp: BigInt! # 时间戳
+  blockNumber: BigInt! # 区块号
+  transactionHash: Bytes! # 交易哈希
+}
+
+"""
+数据更新事件实体
+"""
+type DataUpdated @entity {
+  id: ID! # 交易哈希 + 日志索引
+  user: Bytes! # 用户地址
+  tokenId: BigInt! # Token ID
+  data: String! # 存储的数据
+  timestamp: BigInt! # 时间戳
+  blockNumber: BigInt! # 区块号
+  transactionHash: Bytes! # 交易哈希
+}
+
+"""
+用户实体 - 聚合用户相关的所有活动
+"""
+type User @entity {
+  id: ID! # 用户地址
+  address: Bytes! # 用户地址
+  balance: BigInt! # 当前余额
+  totalSent: BigInt! # 总发送金额
+  totalReceived: BigInt! # 总接收金额
+  transferCount: BigInt! # 转账次数
+  dataUpdateCount: BigInt! # 数据更新次数
+  transfers: [Transfer!]! @derivedFrom(field: "from") # 发送的转账
+  dataUpdates: [DataUpdated!]! @derivedFrom(field: "user") # 数据更新记录
+  firstSeenTimestamp: BigInt! # 首次出现时间
+  lastSeenTimestamp: BigInt! # 最后活跃时间
+}
+
+"""
+代币统计信息
+"""
+type TokenStats @entity {
+  id: ID! # "token-stats" 固定值
+  totalSupply: BigInt! # 总供应量
+  totalTransfers: BigInt! # 总转账次数
+  totalDataUpdates: BigInt! # 总数据更新次数
+  uniqueHolders: BigInt! # 持币地址数量
+  lastUpdateTimestamp: BigInt! # 最后更新时间
+}
+
+"""
+每日统计信息
+"""
+type DailyStats @entity {
+  id: ID! # 日期（YYYY-MM-DD）
+  date: String! # 日期字符串
+  transferCount: BigInt! # 当日转账次数
+  dataUpdateCount: BigInt! # 当日数据更新次数
+  uniqueUsers: BigInt! # 当日活跃用户数
+  volume: BigInt! # 当日交易量
+}
