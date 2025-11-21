@@ -66,21 +66,39 @@ export function useWeb3() {
   // 监听账户变化
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+      const handleAccountsChanged = async (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
+          // 切换账户后重新获取余额
+          if (contract) {
+            try {
+              const balance = await contract.balanceOf(accounts[0]);
+              setBalance(formatEther(balance));
+            } catch (error) {
+              console.error('获取余额失败:', error);
+              setBalance('0');
+            }
+          }
         } else {
           setAccount('');
           setProvider(null);
           setContract(null);
+          setBalance('0');
         }
-      });
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
 
       window.ethereum.on('chainChanged', () => {
         window.location.reload();
       });
+
+      // 清理监听器
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      };
     }
-  }, []);
+  }, [contract]);
 
   // 更新余额
   const updateBalance = async () => {

@@ -74,10 +74,6 @@ export async function querySubgraph<T = any>(
         console.error(`❌ 请求超时 (尝试 ${i + 1}/${retries})`, errorInfo);
       } else if (error.message.includes('Failed to fetch')) {
         console.error(`❌ 网络连接失败 (尝试 ${i + 1}/${retries})`, errorInfo);
-        console.error('可能原因：');
-        console.error('1. 网络不稳定或无法访问外网');
-        console.error('2. The Graph API 服务暂时不可用');
-        console.error('3. 防火墙或代理设置阻止了请求');
       } else {
         console.error(`❌ 查询失败 (尝试 ${i + 1}/${retries})`, errorInfo);
       }
@@ -93,12 +89,6 @@ export async function querySubgraph<T = any>(
 
   // 所有重试都失败
   const errorMsg = `子图查询失败: ${lastError?.message || '未知错误'}`;
-  console.error('❌ 所有重试都失败了');
-  console.error('请检查：');
-  console.error('1. 网络连接是否正常（能否访问外网）');
-  console.error('2. The Graph Studio 子图是否在线: https://thegraph.com/studio/');
-  console.error(`3. 子图 URL 是否正确: ${config.subgraphUrl}`);
-
   throw new Error(errorMsg);
 }
 
